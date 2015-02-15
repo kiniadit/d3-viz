@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+  <head>
+    <meta charset="utf-8">
+    <title>D3 Formatted Histogram</title>
+    <script type="text/javascript" src="d3/d3.js"></script>
+    <style type="text/css">
+    rect:hover{
+      fill:black
+    }
+    div {
+      display:block
+    }
+    rect{
+      transition: 0.3s
+      pointer-events: none
+    }
+    </style>
+  </head>
+  <body>
+    <div>
+      <button class="add">Add a new data value</button>
+  		<button class="remove">Remove a data value</button>
+      <button class="sort">Sort data</button>
+    </div>
+    <script>
+      //create dataset with random values
+      //dataset is an array of objects
+      var dataset = []
+      var numDataPoints = 10
+      var maxValue = 100
+      for(var i =1;i<numDataPoints;i++){
+        dataset.push({
+                key: i,
+                value: Math.floor(Math.random()*maxValue)
+        });
+      }
+      //svg variable with height and width
+      var h = 100
+      var w = 500
+      var svg = d3.select("body")
+                  .append("svg")
+                  .attr("height",h)
+                  .attr("width",w)
+      //define scales
+      var xScale = d3.scale.ordinal()
+                      .domain(d3.range(dataset.length))
+                      .rangeRoundBands([0,w],0.05)
+      var yScale = d3.scale.linear()
+                     .domain([0,d3.max(dataset, function(d){return d.value})])
+                     .range([0,h])
+
+      var key = function(d){return d.key}
+      //draw bars
+      svg.selectAll("rect")
+         .data(dataset, key)
+         .enter()
+         .append("rect")
+         .attr("x", function(d,i){ return xScale(i)})
+         .attr("y", function(d){ return h-yScale(d.value)})
+         .attr("width", xScale.rangeBand())
+         .attr("height", function(d){ return yScale(d.value) })
+         .attr("fill", function(d){return "rgb("+d.value*10+",0,0)"})
+         .on("click",function(){
+           sortBars();
+           sortLabels();
+         })
+
+      //add annotations
+      svg.selectAll("text")
+         .data(dataset,key)
+         .enter()
+         .append("text")
+         .text(function(d){return d.value})
+         .attr("text-anchor", "middle")
+         .attr("x", function(d,i){ return xScale(i) + xScale.rangeBand()/2})
+         .attr("y", function(d){ return h-yScale(d.value)+14})
+         .attr("font-family","sans-serif")
+         .attr("font-size", "10")
+         .attr("fill", "white")
+         .attr("pointer-events","none")
+
+      //update bar chart by clicking add or remove buttons
+      d3.selectAll("button")
+        .on("click", function(){
+
+          var btnClass = d3.select(this).attr("class")
+
+					//update data, with an addition or deletion
+					if (btnClass == "add"){
+            var newNumber = Math.floor(Math.random()*maxValue);
+            var lastKeyValue = dataset[dataset.length - 1].key;
+            dataset.push({
+                    key: lastKeyValue + 1,
+                    value: newNumber
+            });
+          }
+          else if(btnClass == "remove"){
+            dataset.shift();
+          }
+          else{
+            sortBars();
+            sortLabels();
+            return; //return needed to exit code block here
+          }
+
+          //update scales
+          xScale.domain(d3.range(dataset.length));
+    			yScale.domain([0, d3.max(dataset, function(d) { return d.value })]);
+
+          //edit new entries
+          svg.selectAll("rect")
+             .data(dataset, key)
+             .enter()
+             .append("rect")
+             .attr("x", w)
+             .attr("y", function(d){ return h-yScale(d.value)})
+             .attr("width", xScale.rangeBand())
+             .attr("height", function(d){ return yScale(d.value) })
+             .attr("fill", function(d){return "rgb("+d.value*10+",0,0)"})
+             .on("click",function(){
+               sortBars();
+               sortLabels();
+             })
+
+          //update the whole
+          svg.selectAll("rect")
+             .data(dataset, key)
+             .transition()
+             .duration(500)
+             .attr("x", function(d,i){ return xScale(i)})
+             .attr("y", function(d){ return h-yScale(d.value)})
+             .attr("width", xScale.rangeBand())
+             .attr("height", function(d){ return yScale(d.value)})
+
+
+          //remove unused DOM elements
+          svg.selectAll("rect")
+             .data(dataset, key)
+             .exit()
+             .transition()
+             .duration(500)
+             .attr("x",-xScale.rangeBand())
+    			 	 .remove();
+
+          var labels = svg.selectAll("text").data(dataset,key)
+    					//Enter…
+    					  labels.enter()
+    						.append("text")
+    						.text(function(d) {
+    							return d.value;
+    						})
+    						.attr("text-anchor", "middle")
+    						.attr("x", w)
+    						.attr("y", function(d) {
+    							return h - yScale(d.value) + 14;
+    						})
+    					   .attr("font-family", "sans-serif")
+    					   .attr("font-size", "11px")
+    					   .attr("fill", "black");
+
+    					//Update…
+                labels.transition()
+                .duration(500)
+                .attr("text-anchor", "middle")
+                .attr("pointer-events","none")
+                .attr("x", function(d,i){ return xScale(i) + xScale.rangeBand()/2})
+
+
+                //Exit…
+                labels.exit()
+                  .transition()
+                  .duration(500)
+                  .attr("x",-xScale.rangeBand())
+                  .remove();
+        })
+
+        //sort functions
+        //sort bars
+        var sortOrder = false
+        var sortBars = function() {
+        sortOrder = !sortOrder
+        svg.selectAll("rect")
+           .sort(function(a,b) {
+                 if(!sortOrder)
+                   return d3.ascending(a.value,b.value);
+                 else
+                   return d3.descending(a.value,b.value);
+           })
+           .transition()
+           .duration(1000)
+           .attr("x", function(d, i) {
+                 return xScale(i);
+           })
+      };
+
+        //sort labels
+        var sortLabels = function() {
+          svg.selectAll("text")
+             .sort(function(a,b){
+                  if(!sortOrder)
+                    return d3.ascending(a.value,b.value);
+                  else
+                    return d3.descending(a.value,b.value);
+             })
+             .transition()
+             .duration(1000)
+             .attr("x",function(d,i){
+               return xScale(i) + xScale.rangeBand()/2;
+             })
+             .attr("y", function(d){
+               return h-yScale(d.value) +14
+             })
+        };
+
+    </script>
+  </body>
+</html>

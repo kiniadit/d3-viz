@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>D3 Page Template</title>
+        <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.js"></script>
+        <style type="text/css">
+        </style>
+    </head>
+    <body>
+        <script type="text/javascript">
+          var dataset = []
+          for(var i=0;i<50;i++){
+            var newNumber = Math.random()*50
+            dataset.push(newNumber)
+          }
+          var max_of_array = Math.max.apply(Math, dataset);
+
+          var h = 100;
+          var w = 1000;
+          var svg = d3.select("body")
+                  .append("svg")
+                  .attr("height",h)
+                  .attr("width",w)
+          var rect = svg.selectAll("rect")
+                 .data(dataset)
+                 .enter()
+                 .append("rect")
+          var bar_padding = 1
+          rect
+            .attr("x", function(d,i){return i*w/dataset.length})
+            .attr("y", function(d){return h-d})
+            .attr("height", function(d){return d})
+            .attr("width", function(d){return w/dataset.length-bar_padding})
+            .attr("fill", function(d) {return "rgb(0,0," + Math.floor(d*10) + ")"});
+          svg.selectAll("text")
+  			  svg.selectAll("text")
+			       .data(dataset)
+			       .enter()
+			       .append("text")
+			       .text(function(d) {return Math.floor(d);})
+			       .attr("x", function(d, i) {return i * (w/dataset.length);})
+			       .attr("y", function(d) {return h - d + 16; })
+			       .attr("font-family", "sans-serif")
+			       .attr("font-size", "11px")
+			       .attr("fill", "white");
+          svg.selectAll("")
+        </script>
+    </body>
+</html>

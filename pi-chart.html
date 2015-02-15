@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+  <head>
+    <meta charset="utf-8">
+    <title>D3 Pi Chart</title>
+    <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+    <style type="text/css">
+      text {
+				font-family: sans-serif;
+				font-size: 12px;
+				fill: white;
+			}
+      path:hover{
+        fill:gray
+      }
+    </style>
+  </head>
+  <body>
+    <button id="btn">click</button>
+    <div id="chart"></div>
+    <script type="text/javascript">
+
+      		(function () {
+		    "use strict";
+		    var w = 600,
+		        h = 500,
+		        svg, group,
+		        arc, r = 200,
+		        p = Math.PI * 2,
+		        pie, arcs,
+		        data = [1, 2, 3, 4],
+		        color;
+
+		    var generate = function () {
+		        data = [];
+		        for (var i = 0; i < 4; i += 1) {
+		            var n = Math.round(Math.random() * 100);
+		            data.push(n);
+		        }
+		    };
+
+		    var init = function () {
+		        svg = d3.select("#chart").append("svg").attr("width", w).attr("height", h)
+		        group = svg.append("g").attr("transform", "translate(300, 300)");
+		        arc = d3.svg.arc().innerRadius(r * 0).outerRadius(r);
+		    };
+
+		    var paint = function () {
+		        /*
+				arc = d3.svg.arc().innerRadius(r-50).outerRadius(r).startAngle(0).endAngle(p-1);
+				group.append("path").attr("d", arc);
+				*/
+
+		        pie = d3.layout.pie().value(function (d) {
+		            return d;
+		        });
+		        color = d3.scale.category10();
+
+		        arcs = group.selectAll(".arc")
+		            .data(pie(data));
+
+		        arcs.select("g path")
+		            .attr("d", arc)
+		            .attr("fill", function (d) {
+		            return color(d.data);
+		        })
+
+		        arcs.select("g text")
+		            .attr("transform", function (d) {
+		            return "translate(" + arc.centroid(d) + ")";
+		        })
+		            .attr("text-anchor", "middle")
+		            .attr("font-size", "1em")
+		            .text(function (d) {
+		            return d.data;
+		        });
+
+		        var arcsenter = arcs.enter().append("g")
+		            .attr("class", "arc");
+
+		        arcsenter.append("path")
+		            .attr("d", arc)
+		            .attr("fill", function (d) {
+		            return color(d.data);
+		        })
+		            .on("click", function (evt) {
+		            alert(JSON.stringify(evt));
+		        });
+
+		        arcsenter.append("text")
+		            .attr("transform", function (d) {
+		            return "translate(" + arc.centroid(d) + ")";
+		        })
+		            .attr("text-anchor", "middle")
+		            .attr("font-size", "1em")
+		            .text(function (d) {
+		            return d.data;
+		        });
+		    };
+
+		    var cycle = function () {
+		        generate();
+		        paint();
+		    };
+
+		    window.onload = function () {
+		        init();
+		        paint();
+		        d3.select("#btn").on("click", function () {
+		            setInterval(function () {
+		                cycle();
+		            }, 1000);
+		        });
+		    };
+		}());
+    </script>
+</body>
+</html>
